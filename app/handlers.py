@@ -25,7 +25,8 @@ class Register(StatesGroup):
     number = State()
 
 
-channels = os.getenv("CHANNELS_CHECK", "").split(",")
+raw_channels = os.getenv("CHANNELS_CHECK", "")
+channels = [int(ch.strip()) for ch in raw_channels.split(",") if ch.strip()]
 CRYPTO_TOKEN: str = str(os.getenv("CRYPTO_TOKEN"))
 
 if CRYPTO_TOKEN is None:
