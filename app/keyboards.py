@@ -1,3 +1,5 @@
+import os
+
 from aiocryptopay import AioCryptoPay, Networks
 from aiogram.methods import create_invoice_link
 from aiogram.types import (
@@ -8,9 +10,11 @@ from aiogram.types import (
 )
 from aiogram.utils import keyboard
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from dotenv import load_dotenv
 
 from app.database.requests import category_items, get_categories
-from config import CRYPTO_TOKEN, URL_SPONSOR_1, URL_SPONSOR_2
+
+load_dotenv()
 
 main = ReplyKeyboardMarkup(
     keyboard=[
@@ -25,8 +29,16 @@ main = ReplyKeyboardMarkup(
 
 ad = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Подпишитесь на спонсора 1", url=URL_SPONSOR_1)],
-        [InlineKeyboardButton(text="Подпишитесь на спонсора 2", url=URL_SPONSOR_2)],
+        [
+            InlineKeyboardButton(
+                text="Подпишитесь на спонсора 1", url=str(os.getenv("URL_SPONSOR_1"))
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Подпишитесь на спонсора 2", url=str(os.getenv("URL_SPONSOR_2"))
+            )
+        ],
         [InlineKeyboardButton(text="Я подписался", callback_data="check_subscription")],
     ]
 )
@@ -60,7 +72,9 @@ async def items(category_id):
 
 async def payment(item_id: int, price_usd: float, user_id: int, category_id: int):
     keyboard = InlineKeyboardBuilder()
-    crypto = AioCryptoPay(token=CRYPTO_TOKEN, network=Networks.TEST_NET)
+    crypto = AioCryptoPay(
+        token=str(os.getenv("CRYPTO_TOKEN")), network=Networks.TEST_NET
+    )
 
     invoice = await crypto.create_invoice(
         amount=float(price_usd),

@@ -1,4 +1,5 @@
 import logging
+import os
 
 from aiocryptopay import AioCryptoPay, Networks
 from aiogram import Bot, F, Router
@@ -9,12 +10,13 @@ from aiogram.types import Message
 from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from aiogram.utils.text_decorations import MarkdownDecoration
+from dotenv import load_dotenv
 
 import app.database.requests as rq
 import app.keyboards as kb
-from config import CHANNELS_CHECK, CRYPTO_TOKEN
 
 router = Router()
+load_dotenv()
 
 
 class Register(StatesGroup):
@@ -23,8 +25,15 @@ class Register(StatesGroup):
     number = State()
 
 
+channels = os.getenv("CHANNELS_CHECK", "").split(",")
+CRYPTO_TOKEN: str = str(os.getenv("CRYPTO_TOKEN"))
+
+if CRYPTO_TOKEN is None:
+    raise ValueError("CRYPTO_TOKEN is not set")
+
+
 async def is_subscribed(bot: Bot, user_id: int) -> bool:
-    for chat_id in CHANNELS_CHECK:
+    for chat_id in channels:
         try:
             member = await bot.get_chat_member(chat_id=chat_id, user_id=user_id)
             if member.status in ["left", "kicked"]:

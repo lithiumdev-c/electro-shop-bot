@@ -1,10 +1,14 @@
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import BigInteger, ForeignKey, String
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker
 from sqlalchemy.ext.asyncio.engine import create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from config import DATABASE_URL
+load_dotenv()
 
+DATABASE_URL = str(os.getenv("DATABASE_URL"))
 engine = create_async_engine(url=DATABASE_URL)
 
 async_session = async_sessionmaker(engine)
