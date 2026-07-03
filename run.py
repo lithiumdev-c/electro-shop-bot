@@ -22,10 +22,6 @@ async def handle(request):
 
 
 async def main():
-    await async_main()
-    dp.include_router(router)
-    await dp.start_polling(bot)
-
     app = web.Application()
     app.router.add_get("/", handle)
     runner = web.AppRunner(app)
@@ -35,6 +31,10 @@ async def main():
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
     print(f"Сервер запущен на порту {port}")
+
+    await async_main()
+    dp.include_router(router)
+    await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
