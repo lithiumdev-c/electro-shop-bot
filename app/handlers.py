@@ -1,5 +1,6 @@
 import logging
 
+from aiocryptopay import AioCryptoPay, Networks
 from aiogram import Bot, F, Router
 from aiogram.filters.command import Command, CommandStart
 from aiogram.fsm.context import FSMContext
@@ -7,10 +8,11 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
+from aiogram.utils.text_decorations import MarkdownDecoration
 
 import app.database.requests as rq
 import app.keyboards as kb
-from config import CHANNELS_CHECK
+from config import CHANNELS_CHECK, CRYPTO_TOKEN
 
 router = Router()
 
@@ -44,7 +46,7 @@ async def start(msg: Message):
     )
 
 
-@router.callback_query(F.data == "check_subscription")
+@router.callback_query(F.data == "check_subscription" or F.data == "to_main")
 async def check_sub_callback(callback: CallbackQuery, bot: Bot):
     if await is_subscribed(bot, callback.from_user.id):
         await bot.send_message(
@@ -95,6 +97,29 @@ async def item(callback: CallbackQuery, bot: Bot):
         if item_data is None:
             return
         await callback.answer("Вы выбрали товар", show_alert=True)
-        await callback.message.answer(
-            f"Название товара: {item_data.name}\nОписание: {item_data.description}\nЦена: {item_data.price}$"
+        crypto = AioCryptoPay(token=CRYPTO_TOKEN, network=Networks.TEST_NET)
+
+        caption_txt = (
+            f"**{item_data.name}**\n"
+            f"Описание: {item_data.description}\n"
+            f"Цена: {item_data.price}$"
         )
+
+        payment_markup = await kb.payment(
+            item_id=item_data.id,
+            price_usd=float(item_data.price),
+            user_id=callback.from_user.id,
+            category_id=item_data.category,
+        )
+
+        await callback.message.answer_photo(
+            photo=item_data.image,
+            caption=caption_txt,
+            reply_markup=payment_markup,
+            parse_mode="Markdown",
+        )
+        await crypto.close()
+    else:
+        if callback.message is None:
+            return
+        await callback.message.answer("Вы не подписались на спонсоров!")

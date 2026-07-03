@@ -1,3 +1,5 @@
+from aiocryptopay import AioCryptoPay, Networks
+from aiogram.methods import create_invoice_link
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -8,7 +10,7 @@ from aiogram.utils import keyboard
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.database.requests import category_items, get_categories
-from config import URL_SPONSOR_1, URL_SPONSOR_2
+from config import CRYPTO_TOKEN, URL_SPONSOR_1, URL_SPONSOR_2
 
 main = ReplyKeyboardMarkup(
     keyboard=[
@@ -37,7 +39,7 @@ async def categories():
     for category in all_categories:
         keyboard.add(
             InlineKeyboardButton(
-                text=category.name, callback_data=f"category_{category.id}"
+                text=f"{category.name}", callback_data=f"category_{category.id}"
             )
         )
     keyboard.add(InlineKeyboardButton(text="На главную", callback_data="to_main"))
@@ -54,3 +56,38 @@ async def items(category_id):
         )
     keyboard.add(InlineKeyboardButton(text="На главную", callback_data="to_main"))
     return keyboard.adjust(2).as_markup()
+
+
+async def payment(item_id: int, price_usd: float, user_id: int, category_id: int):
+    keyboard = InlineKeyboardBuilder()
+    crypto = AioCryptoPay(token=CRYPTO_TOKEN, network=Networks.TEST_NET)
+
+    invoice = await crypto.create_invoice(
+        amount=float(price_usd),
+        fiat="USD",
+        currency_type="fiat",
+        payload=f"{user_id}_{item_id}",
+    )
+
+    keyboard.add(
+        InlineKeyboardButton(
+            text=f"💳 Оплатить ${price_usd}",
+            url=invoice.bot_invoice_url,
+        )
+    )
+
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Проверить оплату",
+            callback_data=f"check_payment_{invoice.invoice_id}",
+        )
+    )
+
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Назад к товарам",
+            callback_data=f"category_{category_id}",
+        )
+    )
+    await crypto.close()
+    return keyboard.adjust(1, 2).as_markup()

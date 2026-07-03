@@ -31,10 +31,11 @@ class Category(Base):
 class Item(Base):
     __tablename__ = "items"
 
+    image: Mapped[str] = mapped_column(String(200))
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(25))
     description: Mapped[str] = mapped_column(String(120))
-    price: Mapped[int] = mapped_column()
+    price: Mapped[float] = mapped_column()
     category: Mapped[int] = mapped_column(ForeignKey("categories.id"))
 
 
