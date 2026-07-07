@@ -19,8 +19,7 @@ load_dotenv()
 main = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Каталог")],
-        [KeyboardButton(text="Корзина")],
-        [KeyboardButton(text="Контакты")],
+        [KeyboardButton(text="О нас")],
         [KeyboardButton(text="Ваш профиль")],
     ],
     resize_keyboard=True,

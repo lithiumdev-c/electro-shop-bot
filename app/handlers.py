@@ -70,6 +70,30 @@ async def check_sub_callback(callback: CallbackQuery, bot: Bot):
         )
 
 
+@router.message(F.data == "О нас")
+async def about_us(msg: Message, bot: Bot):
+    if msg.from_user is None:
+        return
+    if await is_subscribed(bot, msg.from_user.id):
+        await msg.answer(
+            "**О нас**\nДанный бот был создан для портфолио и на данный момент не является коммерческим проектом.\nСсылка на репозиторий: https://github.com/lithiumdev-c/electro-shop-bot"
+        )
+    else:
+        await msg.answer("⛔ Вы не подписаны на наших спонсоров!", reply_markup=kb.ad)
+
+
+@router.message(F.text == "Ваш профиль")
+async def profile(msg: Message, bot: Bot):
+    if msg.from_user is None:
+        return
+    if await is_subscribed(bot, msg.from_user.id):
+        await msg.answer(
+            f"**Ваш профиль**\nИмя: {msg.from_user.first_name}\nID: {msg.from_user.id}\n"
+        )
+    else:
+        await msg.answer("⛔ Вы не подписаны на наших спонсоров!", reply_markup=kb.ad)
+
+
 @router.message(F.text == "Каталог")
 async def catalog(msg: Message, bot: Bot):
     if msg.from_user is None:
