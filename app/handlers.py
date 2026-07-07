@@ -179,7 +179,7 @@ async def check_payment(callback: CallbackQuery, bot: Bot):
         if invoice.status != "paid":
             if invoice.payload is None:
                 return
-            payload_data = invoice.payload.split()
+            payload_data = invoice.payload.split("_")
             user_id = int(payload_data[0])
             item_id = int(payload_data[1])
 
