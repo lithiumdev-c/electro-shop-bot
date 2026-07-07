@@ -10,6 +10,8 @@ from aiogram.types import Message
 from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.reply_keyboard_remove import ReplyKeyboardRemove
 from aiogram.utils.text_decorations import MarkdownDecoration
+from aiohttp.web_response import payload
+from attr import ib
 from dotenv import load_dotenv
 
 import app.database.requests as rq
@@ -157,3 +159,52 @@ async def item(callback: CallbackQuery, bot: Bot):
         if callback.message is None:
             return
         await callback.message.answer("Вы не подписались на спонсоров!")
+
+
+@router.callback_query(F.data.startswith("check_payment_"))
+async def check_payment(callback: CallbackQuery, bot: Bot):
+    if callback.data is None or callback.message is None:
+        return
+    invoice_id = int(callback.data.split("_")[-1])
+    crypto = AioCryptoPay(token=CRYPTO_TOKEN, network=Networks.TEST_NET)
+
+    try:
+        invoices = await crypto.get_invoices(invoice_ids=invoice_id)
+        if not invoices:
+            return
+        invoice = invoices
+        if isinstance(invoice, list):
+            invoice = invoice[0]
+
+        if invoice.status != "paid":
+            if invoice.payload is None:
+                return
+            payload_data = invoice.payload.split()
+            user_id = int(payload_data[0])
+            item_id = int(payload_data[1])
+
+            try:
+                is_already_delivered = False
+
+                if is_already_delivered:
+                    await callback.message.answer("Этот счет уже был доставлен")
+                    await callback.answer()
+                    return
+
+                await callback.answer("Оплата подтверждена", show_alert=True)
+                await callback.message.answer(
+                    "Ваш заказ будет доставлен в ближайшее время\n"
+                    f"Спасибо за покупку!\nТовар: {item_id} успешно куплен!",
+                )
+            except Exception as e:
+                await callback.answer(f"Ошибка: {e}", show_alert=True)
+        elif invoice.status == "expired":
+            await callback.answer("Счет истек", show_alert=True)
+            await callback.message.answer("Счет истек", show_alert=True)
+        else:
+            await callback.answer("Счет не оплачен", show_alert=True)
+            await callback.message.answer("Счет не оплачен", show_alert=True)
+    except Exception as e:
+        await callback.answer(f"Ошибка: {e}", show_alert=True)
+    finally:
+        await crypto.close()
