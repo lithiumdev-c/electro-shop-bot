@@ -58,7 +58,7 @@ async def start(msg: Message):
     )
 
 
-@router.callback_query(F.data == "check_subscription" or F.data == "to_main")
+@router.callback_query(F.data.in_(["check_subscription", "to_main"]))
 async def check_sub_callback(callback: CallbackQuery, bot: Bot):
     if await is_subscribed(bot, callback.from_user.id):
         await bot.send_message(
