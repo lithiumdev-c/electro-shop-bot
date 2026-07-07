@@ -72,7 +72,7 @@ async def check_sub_callback(callback: CallbackQuery, bot: Bot):
         )
 
 
-@router.message(F.data == "О нас")
+@router.message(F.text == "О нас")
 async def about_us(msg: Message, bot: Bot):
     if msg.from_user is None:
         return
@@ -176,7 +176,7 @@ async def check_payment(callback: CallbackQuery, bot: Bot):
         if isinstance(invoice, list):
             invoice = invoice[0]
 
-        if invoice.status != "paid":
+        if invoice.status == "paid":
             if invoice.payload is None:
                 return
             payload_data = invoice.payload.split("_")
